@@ -25,12 +25,14 @@ const reducer = (state, action) => {
 
 const TwilioVideoContext = createContext();
 
+// part 4
 const TwilioVideoProvider = ({ children }) => (
   <TwilioVideoContext.Provider value={useReducer(reducer, DEFAULT_STATE)}>
     {children}
   </TwilioVideoContext.Provider>
 );
 
+// keeps the context when page changes. Layout would lose it on mount/unmount
 export const wrapRootElement = ({ element }) => (
   <TwilioVideoProvider>{element}</TwilioVideoProvider>
 );
