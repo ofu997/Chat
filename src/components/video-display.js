@@ -1,7 +1,7 @@
 import React from "react";
 
 const VideoDisplay = props => {
-  return <pre>{JSON.stringify(props, null, 2)}</pre>;
+  return <h1> Room: '{props.roomID}'</h1>
 };
 
 export default VideoDisplay;
