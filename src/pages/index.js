@@ -8,9 +8,11 @@ import Join from "../components/join";
 //   </Layout>
 // );
 
-const Index = () => (
+const Index = ({ location }) => (
   <Layout>
-    <Join />
+    <Join 
+      location = { location }
+    />
   </Layout>
 );
 
