@@ -1,0 +1,3 @@
+Index->Join (gets state from use twilio video, handleSubmit: provides getRoomToken())
+
+Room->VideoDisplay and BounceToHome
