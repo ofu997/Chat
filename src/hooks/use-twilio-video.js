@@ -25,7 +25,6 @@ const reducer = (state, action) => {
 
 const TwilioVideoContext = createContext();
 
-// part 4
 const TwilioVideoProvider = ({ children }) => (
   <TwilioVideoContext.Provider value={useReducer(reducer, DEFAULT_STATE)}>
     {children}
