@@ -20,7 +20,7 @@ const VideoDisplay = ({ roomID }) => {
     <>
       <h1> 
         Room: '{roomID}'
-      </h1>);
+      </h1>
       <div className='chat' ref={videoRef} /> 
     </>
   )
