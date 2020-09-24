@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useReducer, useRef } from "react";
 import axios from 'axios';
-import { connect } from 'twilio-video';
+import { connect, createLocalVideoTrack } from 'twilio-video';
 
 
 
@@ -43,10 +43,56 @@ export const wrapRootElement = ({ element }) => (
   <TwilioVideoProvider>{element}</TwilioVideoProvider>
 );
 
+
+
+
+
+const handleRemoteParticipant = container => participant => {
+  const id = participant.sid;
+
+  const addTrack = track => {
+    const container = document.getElementById(id);
+
+    // Create an HTML element to show the track (e.g. <audio> or <video>)
+    const media = track.attach(); 
+
+    container.appendChild(media); 
+  };
+
+  const el = document.createElement('div');
+  el.id = id;
+  el.className = 'remote-participant';
+
+  const name = document.createElement('h4');
+  name.innerText = participant.identity;
+  el.appendChild(name);
+
+  // Attach the new element to the DOM.
+  container.appendChild(el); 
+
+  // Attach existing participant audio and video tracks to the DOM.
+  participant.tracks.forEach(publication => {
+    if (publication.isSubscribed) {
+      addTrack(publication.track);
+    }
+  });
+
+  // If new tracks get added later, add those, too
+  participant.on('trackSubscribed', addTrack);
+}
+
+
+
+
+
+
+
+
+
 const useTwilioVideo = () => {
   const [state, dispatch] = useContext(TwilioVideoContext);
   const videoRef = useRef();
-
+  const { room, token, roomName } = state; 
   const getRoomToken = async ({ identity, roomName }) => {
     const result = await axios.post(TWILIO_TOKEN_URL, {
       identity, 
@@ -55,68 +101,46 @@ const useTwilioVideo = () => {
     dispatch({ type: 'join', token: result.data, identity, roomName });
   };
 
-  const handleRemoteParticipant = (container, participant) => {
-    const id = participant.sid;
-    const el = document.createElement('div');
-    el.id = id;
-    el.className = 'remote-participant';
 
-    const name = document.createElement('h4');
-    name.innerText = 'name';
-    el.appendChild(name);
 
-    container.appendChild(el); 
-
-    const addTrack = track => {
-      const participantDiv = document.getElementById(id);
-      const media = track.attach(); 
-
-      participantDiv.appendChild(media); 
-    }
-
-    participant.tracks.forEach(publication => {
-      if (publication.isSubscribed) {
-        addTrack(publication.track);
-      }
-    });
-
-    participant.on('trackSubscribed', addTrack);
-  }
 
   const connectToRoom = async () => {
     if (!state.token) {
       return;
     }
 
+    // Connect to the appropriate Twilio video chat room
     const room = await connect(
       state.token,
-      {
-        name: state.roomName,
-        audio: true,
-        video: { width: 640 },
-        logLevel: 'info',
-      }
+      { name: state.roomName, audio: true, video: { width: 640 }, logLevel: 'info', }
     ).catch(error => {
       console.error(`Unable to join the room: ${error.message}`);
     });
   
-    const localTrack = [...room.localParticipant.videoTracks.values()][0].track;
+    // Add your own video and audio tracks so you can see yourself
+    const localTrack = await createLocalVideoTrack().catch(error => {
+      console.error(`Unable to create local tracks: ${error.message}`);
+    });
+    // old: const localTrack = [...room.localParticipant.videoTracks.values()][0].track;
+    // Attach the local video if it’s not already visible
     if (!videoRef.current.hasChildNodes()) {
       const localEl = localTrack.attach(); 
+      localEl.className = 'local-video';
+
       videoRef.current.appendChild(localEl); 
     }
 
-    const handleParticipant = participant => {
-      handleRemoteParticipant(videoRef.current, participant);
-    };
 
+    const handleParticipant = handleRemoteParticipant(videoRef.current);
+    // Handle any participants who are *already* connected to this room
     room.participants.forEach(handleParticipant); 
-    room.on('participantConnected', handleRemoteParticipant); 
-    console.log(`A remote Participant connected`);
+    // Handle participants who join *after* you’ve connected to the room
+    room.on('participantConnected', handleParticipant); 
+
     dispatch({ type: 'set-active-room', room })
   };
   const startVideo = () => connectToRoom(); 
-  return { state, getRoomToken, startVideo, videoRef };
+  return { state, getRoomToken, startVideo, roomName, room, token, videoRef };
 };
 
 export default useTwilioVideo;
