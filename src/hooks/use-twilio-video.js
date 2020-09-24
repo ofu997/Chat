@@ -2,7 +2,7 @@ import React, { createContext, useContext, useReducer, useRef } from "react";
 import axios from 'axios';
 import { connect, createLocalVideoTrack } from 'twilio-video';
 
-
+// This is the version at the end of 'Show Video in Gatsby from Remote Participants with React Hooks'
 
 const TWILIO_TOKEN_URL = 'https://manatee-vulture-7038.twil.io/create-room-token';
 
