@@ -24,7 +24,10 @@ const reducer = (state, action) => {
          
       };
     case 'set-active-room':
-      return { ...state, room: action.room }
+      return { ...state, room: action.room };
+    case 'disconnect':
+      state.room && state.room.disconnect(); //built-in Twilio method disconnects if there's a room
+      return DEFAULT_STATE;
     default:
       return DEFAULT_STATE;
   }
@@ -79,6 +82,13 @@ const handleRemoteParticipant = container => participant => {
 
   // If new tracks get added later, add those, too
   participant.on('trackSubscribed', addTrack);
+
+  participant.on('trackUnsubscribed', track => {
+    track.detach().forEach(el => el.remove());
+
+    const container = document.getElementById(id);
+    if (container) container.remove(); 
+  });
 }
 
 
@@ -139,8 +149,11 @@ const useTwilioVideo = () => {
 
     dispatch({ type: 'set-active-room', room })
   };
+
   const startVideo = () => connectToRoom(); 
-  return { state, getRoomToken, startVideo, roomName, room, token, videoRef };
+  const leaveRoom = () => dispatch({ type: 'disconnect' });
+
+  return { state, getRoomToken, startVideo, leaveRoom, roomName, room, token, videoRef };
 };
 
 export default useTwilioVideo;

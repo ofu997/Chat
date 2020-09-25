@@ -22,7 +22,7 @@ const Join = ({ location }) => {
   return (
     <>
       <h1>Start or Join a Video Chat</h1>
-      <pre>{JSON.stringify(state, null, 2)}</pre>
+      {/* <pre>{JSON.stringify(state, null, 2)}</pre> */}
       <form className="start-form" onSubmit={handleSubmit}>
         <label htmlFor="identity">
             Display name:
